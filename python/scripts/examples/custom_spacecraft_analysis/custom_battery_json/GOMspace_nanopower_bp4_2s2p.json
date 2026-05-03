@@ -1,0 +1,17 @@
+{
+    "DESCRIPTION_LINE1" : "The purpose of this custom JSON is to show that the ability to construct presets of hardware your group may be interested in is very simple.",
+    "DESCRIPTION_LINE2" : "In fact, with the configFromJson method, you can make presets of any model not just hardware models.",
+    "DESCRIPTION_LINE3" : "This lets you quickly 'hot swap' components out to test their performance characteristics in a highly built out simulation which can inform what components you may want to buy.",
+    "DESCRIPTION_LINE4" : "By having the hardware prebuilds in a JSON folder lets you quickly organize and sort components in a defined location, as well as let you have good tracablity to any parameters.",
+    "DESCRIPTION_LINE5" : "This feature also lets you port large chunks of your work in one project to another. Hopefully, this is clearly a very powerful tool.",
+
+    "Source 1" : "NASA State of the Art",
+    "Source 2" : "https://gomspace.com/shop/subsystems/power/nanopower-bp4.aspx",
+    "Source 3" : "https://www.18650batterystore.com/collections/18650-batteries",
+    "mass" : "0.270",                       "\\comment1" : "Section 2.1 of source 2",
+    "peak_battery_voltage" : "4.2",         "\\comment2" : "Section 2.2 of source 2 ~ peak_voltage/num_series = 8.4/2 ; Also fully charged voltage in source 3",
+    "single_battery_capacity" : "10.75",    "\\comment3" : "Section 2.2 of source 2 ~ nominal_Wh/num_batteries = 43/4 ; Also nominal_Ah*nominal_V_per_battery/num_parallel = 6*3.6/2",
+    "shutoff_capacity" : "0.05",            "\\comment4" : "Comes from lithium ion capacity curves and the 2 volt cut-off value from source 3",
+    "num_batteries_series" : "2",           "\\comment5" : "Obvious from name",
+    "num_batteries_parallel" : "2",         "\\comment6" : "Obvious from name"
+}

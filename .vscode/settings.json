@@ -6,4 +6,5 @@
         "${workspaceFolder}"
     ],
     "files.autoSave": "onFocusChange",
+    "search.useIgnoreFiles": false
 }

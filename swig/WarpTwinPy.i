@@ -1,5 +1,5 @@
 /******************************************************************************
-* Copyright (c) ATTX Inc 2026. All Rights Reserved.
+* Copyright (c) ATTX INC 2026. All Rights Reserved.
 *
 * This software and associated documentation (the "Software") are the 
 * proprietary and confidential information of ATTX, INC. The Software is 
@@ -53,7 +53,7 @@
 #include "architecture/DataIO.hpp"
 #include "architecture/signalutils.h"
 
-// CFS++ Includes
+// warpOS Includes
 #include "flight/FlightExecutive.h"
 #include "flight/App.h"
 #include "flight/OS.h"
@@ -66,7 +66,6 @@
 #include "logging/SimLogger.h"
 #include "logging/CsvLogger.h"
 #include "logging/Hdf5Logger.h"
-#include "logging/MatLogger.h"
 #include "logging/LogManager.h"
 
 // Frames and frame derivatives
@@ -85,6 +84,7 @@
 // Unit utils
 #include "constants/unitutils.h"
 #include "cr3bputils/conversions.h"
+#include "constants/planetdefaults.h"
 
 // Spice manager
 #include "utils/spiceutils.h"
@@ -97,6 +97,11 @@
 #include "simulation/Model.h"
 #include "simulation/SimTimeManager.h"
 #include "simulation/stateinit.h"
+
+// PlanetRel stuff
+#include "utils/planetrelutils.h"
+#include "gncutils/states/planetrelutils.h"
+#include "utils/googleearthkml.h"
 
 using namespace warptwin;
 
@@ -112,6 +117,7 @@ using namespace warptwin;
 %ignore warpos::UartConfig_t;
 %ignore warpos::I2cConfig_t;
 %ignore warpos::PwmConfig_t;
+%ignore warpos::Os::yield;
 
 %include "types.h"
 %include "configuration.h"
@@ -136,6 +142,7 @@ using namespace warptwin;
 %template(Matrix3) clockwerk::Matrix<3, 3>;
 %template(Matrix4) clockwerk::Matrix<4, 4>;
 %template(Matrix6) clockwerk::Matrix<6, 6>;
+%template(Matrix16) clockwerk::Matrix<16, 16>;
 %template(Matrix21) clockwerk::Matrix<2, 1>;
 %template(Matrix31) clockwerk::Matrix<3, 1>;
 %template(Matrix41) clockwerk::Matrix<4, 1>;
@@ -160,7 +167,7 @@ using namespace warptwin;
 %include "architecture/DataIO.hpp"
 %include "architecture/signalutils.h"
 
-// CFS++ Includes
+// warpOS Includes
 %include "flight/FlightExecutive.h"
 %include "flight/App.h"
 %include "flight/OS.h"
@@ -181,12 +188,14 @@ using namespace warptwin;
 %include "logging/SimLogger.h"
 %include "logging/CsvLogger.h"
 %include "logging/Hdf5Logger.h"
-%include "logging/MatLogger.h"
 %include "logging/LogManager.h"
 
 // Unit utils
 %include "constants/unitutils.h"
 %include "cr3bputils/conversions.h"
+%immutable;
+%include "constants/planetdefaults.h"
+%mutable;
 
 // Spice manager
 %include "utils/spiceutils.h"
@@ -210,10 +219,36 @@ using namespace warptwin;
 
 %template(DataIODouble) clockwerk::DataIO<double>;
 %template(DataIOFloat) clockwerk::DataIO<float>;
-%template(DataIOInt) clockwerk::DataIO<int>;
 %template(DataIOBool) clockwerk::DataIO<bool>;
 %template(DataIOPointer) clockwerk::DataIO<void*>;
 %template(DataIOString) clockwerk::DataIO<std::string>;
+
+// All this crap is just to swig wrap a char* into a DataIO as a string
+%include "std_string.i"
+%extend clockwerk::DataIO<char*> {
+  void set(const std::string& s) {(*$self)(const_cast<char*>(s.c_str()));}
+  std::string get() const {const char* p = (*$self)();return p ? std::string(p) : std::string();}
+
+  %pythoncode %{
+  # Make obj("...") work with Python str by dispatching to set/get
+  def __call__(self, *args):
+      if len(args) == 0:
+          return self.get()
+      if len(args) == 1 and isinstance(args[0], str):
+          return self.set(args[0])
+      # fall back to the original overloads (e.g., bytes)
+      return _WarpTwinPy.DataIOCharPtr___call__(self, *args)
+  %}
+}
+%template(DataIOCharPtr) clockwerk::DataIO<char*>;
+
+%template(DataIOInt) clockwerk::DataIO<int>;
+%template(DataIOUInt) clockwerk::DataIO<unsigned int>;
+
+%template(DataIOUInt8) clockwerk::DataIO<uint8>;
+%template(DataIOUInt16) clockwerk::DataIO<uint16>;
+%template(DataIOInt8) clockwerk::DataIO<int8>;
+%template(DataIOInt16) clockwerk::DataIO<int16>;
 
 // Vector types supported by DataIO
 %template(DataIOVectorDouble) clockwerk::DataIO<std::vector<double>>;
@@ -227,6 +262,7 @@ using namespace warptwin;
 %template(DataIOMatrix3) clockwerk::DataIO<clockwerk::Matrix<3, 3>>;
 %template(DataIOMatrix4) clockwerk::DataIO<clockwerk::Matrix<4, 4>>;
 %template(DataIOMatrix6) clockwerk::DataIO<clockwerk::Matrix<6, 6>>;
+%template(DataIOMatrix16) clockwerk::DataIO<clockwerk::Matrix<16, 16>>;
 %template(DataIOMatrix21) clockwerk::DataIO<clockwerk::Matrix<2, 1>>;
 %template(DataIOMatrix31) clockwerk::DataIO<clockwerk::Matrix<3, 1>>;
 %template(DataIOMatrix41) clockwerk::DataIO<clockwerk::Matrix<4, 1>>;
@@ -250,3 +286,16 @@ using namespace warptwin;
 %template(DataIOGTPtr) clockwerk::DataIO<clockwerk::GraphTreeObject*>;
 
 %template(VecFramePtr) std::vector<warptwin::Frame*>;
+
+%include <std_vector.i>
+%include <std_string.i>
+%include <stl.i>
+
+%template(VecString) std::vector<std::string>;
+%template(VecDouble) std::vector<double>;
+%template(VecDouble2d) std::vector<std::vector<double>>;
+
+// PlanetRel stuff
+%include "utils/planetrelutils.h"
+%include "gncutils/states/planetrelutils.h"
+%include "utils/googleearthkml.h"

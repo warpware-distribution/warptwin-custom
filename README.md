@@ -3,7 +3,7 @@ WarpTwin: Next generation simulation for mission design, GN&C development, fligh
 
 ## References
 - Detailed documentation on WarpTwin, including model documentation can be found here: https://github.com/attx-engineering/warptwin-users-guide/blob/main/WarpTwin%20User's%20Guide.pdf
-- WarpTwin is also equipped with an AI chatbot trained on its source code and user's manuals here: http://assist.attxsoftware.com:8504/
+- WarpTwin is also equipped with an AI chatbot trained on its source code and user's manuals here: https://assist.warpware.co/
 
 ## Release Notes
 WarpTwin is released on a quarterly cadence with releases tagged as month.year-release. At minimum, ATTX does our best to cut a release per quarter on the third Friday of that month. For example 25.03-0 is release on the third Friday of March, 2025, and is the first release in that quarter. 

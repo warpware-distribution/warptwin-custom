@@ -1,0 +1,11 @@
+{
+    "DESCRIPTION_LINE1" : "The purpose of this custom JSON is to show that the ability to construct presets of hardware your group may be interested in is very simple.",
+    "DESCRIPTION_LINE2" : "In fact, with the configFromJson method, you can make presets of any model not just hardware models.",
+    "DESCRIPTION_LINE3" : "This lets you quickly 'hot swap' components out to test their performance characteristics in a highly built out simulation which can inform what components you may want to buy.",
+    "DESCRIPTION_LINE4" : "By having the hardware prebuilds in a JSON folder lets you quickly organize and sort components in a defined location, as well as let you have good tracablity to any parameters.",
+    "DESCRIPTION_LINE5" : "This feature also lets you port large chunks of your work in one project to another. Hopefully, this is clearly a very powerful tool.",
+    
+    "Source 1" : "https://www.endurosat.com/products/6u-solar-panel/",
+    "panel_eff" : "0.29",           "\\comment1" : "Source 1 Used the end-of-life (EOL) power efficiency",
+    "mass" : "0.392",               "\\comment2" : "Source 1"
+}

@@ -1,8 +1,8 @@
 /******************************************************************************
-* Copyright (c) ATTX Inc 2026. All Rights Reserved.
+* Copyright (c) ATTX INC 2026. All Rights Reserved.
 *
 * This software and associated documentation (the "Software") are the 
-* proprietary and confidential information of ATTX Inc. The Software is 
+* proprietary and confidential information of ATTX INC. The Software is 
 * furnished under a license agreement between ATTX and the user organization 
 * and may be used or copied only in accordance with the terms of the agreement.
 * Refer to 'license/attx_license.adoc' for standard license terms.
@@ -11,7 +11,7 @@
 * INTERNATIONAL TRAFFIC IN ARMS REGULATIONS (ITAR) OR THE EXPORT ADMINISTRATION 
 * REGULATIONS (EAR99). No part of the Software may be used, reproduced, or 
 * transmitted in any form or by any means, for any purpose, without the express 
-* written permission of ATTX Inc.
+* written permission of ATTX INC.
 ******************************************************************************/
 // THIS IS AN AUTO-GENERATED FILE AND SHOULD NOT BE MODIFIED UNDER 
 // ANY CIRCUMSTANCES.
@@ -28,6 +28,7 @@
 // SWIG wrapped elsewhere and would be duplicated.
 %ignore warpos::FlightExecutive;
 %ignore warpos::OS;
+%ignore warpos::OS::yield;
 %ignore warpos::Platform;
 %ignore warpos::Setup;
 %ignore warpos::Scheduler;
@@ -73,6 +74,24 @@
 %ignore warptwin::LogManager;
 %ignore std::array;
 %ignore std::vector;
+%ignore warptwin::writeKmlFile;
+%ignore warptwin::writeTrajectory;
+%ignore warpos::nedFromLatLonDetic;
+%ignore warpos::enuFromLatLonDetic;
+%ignore warpos::llaDeticToPCR;
+%ignore warpos::pcrToDeticLla;
+%ignore warptwin::heikkinenLla;
+%ignore warptwin::pcr2lla;
+%ignore warptwin::convertVelNd2Dim;
+%ignore warptwin::convertPosNd2Dim;
+%ignore warptwin::convertVelDim2Nd;
+%ignore warptwin::convertPosDim2Nd;
+%ignore warptwin::tStar;
+%ignore warptwin::lStar;
+%ignore warptwin::muStar;
+%ignore warptwin::frameRotate;
+%ignore warptwin::framePositionTransform;
+%ignore warptwin::frameVelocityTransform;
 
 // Include other pre-defined modules
 %include <std_string.i>
