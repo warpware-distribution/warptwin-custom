@@ -31,9 +31,9 @@ set(CMAKE_C_FLAGS "-g -Og -Wall -fPIC")
 
 # Export our project dir for access in Python
 execute_process(COMMAND touch ${PROJECT_BINARY_DIR}/__init__.py)
-execute_process(COMMAND mkdir -p ${PROJECT_BINARY_DIR}/warptwin)
+execute_process(COMMAND mkdir -p ${PROJECT_BINARY_DIR}/custom)
 execute_process(COMMAND mkdir -p ${PROJECT_BINARY_DIR}/swig_auto)
-execute_process(COMMAND touch ${PROJECT_BINARY_DIR}/warptwin/__init__.py)
+execute_process(COMMAND touch ${PROJECT_BINARY_DIR}/custom/__init__.py)
 
 ##############################################################################
 # Set up dependencies
@@ -119,7 +119,7 @@ execute_process(COMMAND BuildProcessFiles.py
 
 find_package (SWIG)
 include (UseSWIG)
-set(CMAKE_SWIG_OUTDIR ${PROJECT_BINARY_DIR}/warptwin)
+set(CMAKE_SWIG_OUTDIR ${PROJECT_BINARY_DIR}/custom)
 set(MAN_SWIG_DIR ${PROJECT_SOURCE_DIR}/swig)
 file(GLOB_RECURSE MAN_SWIG ${MAN_SWIG_DIR}/*.i)
 

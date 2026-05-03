@@ -36,7 +36,6 @@ from warptwin.FlatPlateDragModel import FlatPlateDragModel
 exc = SimulationExecutive()     # Create our executive -- by convention named exc
 exc.parseArgs(sys.argv)         # this interperets command-line inputs
 exc.setRateHz(1)                #  We can setRateHz or setRateSec -- default is 1 second
-# exc.logLevel(LOG_DEBUG)
 
 earth = SpicePlanet(exc, "earth")
 
