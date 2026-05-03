@@ -2,7 +2,7 @@
 // README at: https://github.com/devcontainers/templates/tree/main/src/ubuntu
 {
 	// This is our OS image -- we're using the latest Debian release
-	"name": "ModelSpace",
+	"name": "WarpTwin",
 	"image": "mcr.microsoft.com/devcontainers/base:jammy",
 
 	"runArgs": [
@@ -28,7 +28,7 @@
 	},
 
 	// Desktop lite is the tool we'll use to be able to view live outputs (such as
-	// liveplot and 3D graphics) while running ModelSpace -- check out the docs for
+	// liveplot and 3D graphics) while running WarpTwin -- check out the docs for
 	// more on how to use this
 	"features": {
 		"desktop-lite": {
@@ -43,6 +43,6 @@
 	"forwardPorts": [6080, 5901],
 
 	// Run the install script upon creation of our container. This will go through the list
-	// of ModelSpace required packages and automatically install them.
-	"postCreateCommand": "unzip ms_mac.zip; cd modelspace; ./install.sh"
+	// of WarpTwin required packages and automatically install them.
+	"postCreateCommand": "unzip ms_mac.zip; cd warptwin; ./install.sh"
 }

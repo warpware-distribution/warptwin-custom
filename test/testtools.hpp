@@ -1,8 +1,8 @@
 /******************************************************************************
-* Copyright (c) ATTX LLC 2024. All Rights Reserved.
+* Copyright (c) ATTX Inc 2026. All Rights Reserved.
 *
 * This software and associated documentation (the "Software") are the 
-* proprietary and confidential information of ATTX, LLC. The Software is 
+* proprietary and confidential information of ATTX Inc. The Software is 
 * furnished under a license agreement between ATTX and the user organization 
 * and may be used or copied only in accordance with the terms of the agreement.
 * Refer to 'license/attx_license.adoc' for standard license terms.
@@ -11,7 +11,7 @@
 * INTERNATIONAL TRAFFIC IN ARMS REGULATIONS (ITAR) OR THE EXPORT ADMINISTRATION 
 * REGULATIONS (EAR99). No part of the Software may be used, reproduced, or 
 * transmitted in any form or by any means, for any purpose, without the express 
-* written permission of ATTX, LLC.
+* written permission of ATTX Inc.
 ******************************************************************************/
 /*
 Clockwerk Test Tools File

@@ -1,8 +1,8 @@
 /******************************************************************************
-* Copyright (c) ATTX LLC 2024. All Rights Reserved.
+* Copyright (c) ATTX Inc 2026. All Rights Reserved.
 *
 * This software and associated documentation (the "Software") are the 
-* proprietary and confidential information of ATTX, LLC. The Software is 
+* proprietary and confidential information of ATTX Inc. The Software is 
 * furnished under a license agreement between ATTX and the user organization 
 * and may be used or copied only in accordance with the terms of the agreement.
 * Refer to 'license/attx_license.adoc' for standard license terms.
@@ -11,7 +11,7 @@
 * INTERNATIONAL TRAFFIC IN ARMS REGULATIONS (ITAR) OR THE EXPORT ADMINISTRATION 
 * REGULATIONS (EAR99). No part of the Software may be used, reproduced, or 
 * transmitted in any form or by any means, for any purpose, without the express 
-* written permission of ATTX, LLC.
+* written permission of ATTX Inc.
 ******************************************************************************/
 // THIS IS AN AUTO-GENERATED FILE AND SHOULD NOT BE MODIFIED UNDER 
 // ANY CIRCUMSTANCES.
@@ -24,13 +24,13 @@
 %module <<ItemName>>
 #pragma SWIG nowarn=302,509,362
 
-// Set classes to ignore -- generally ModelSpacePy code which is already
+// Set classes to ignore -- generally WarpTwinPy code which is already
 // SWIG wrapped elsewhere and would be duplicated.
-%ignore cfspp::FlightExecutive;
-%ignore cfspp::OS;
-%ignore cfspp::Platform;
-%ignore cfspp::Setup;
-%ignore cfspp::Scheduler;
+%ignore warpos::FlightExecutive;
+%ignore warpos::OS;
+%ignore warpos::Platform;
+%ignore warpos::Setup;
+%ignore warpos::Scheduler;
 %ignore clockwerk::Time;
 %ignore clockwerk::GraphTreeObject;
 %ignore clockwerk::DataIOBase;
@@ -44,39 +44,39 @@
 %ignore clockwerk::MRP;
 %ignore clockwerk::Euler321;
 %ignore clockwerk::DCM;
-%ignore modelspace::Joint;
-%ignore modelspace::Frame;
-%ignore modelspace::Body;
-%ignore modelspace::Node;
-%ignore modelspace::getFrameRelativeDCM;
-%ignore modelspace::FrameRotate;
-%ignore modelspace::FramePositionTransform;
-%ignore modelspace::FrameVelocityTransform;
-%ignore modelspace::getCompositeRotation;
-%ignore modelspace::getCompositeRotationQuat;
+%ignore warptwin::Joint;
+%ignore warptwin::Frame;
+%ignore warptwin::Body;
+%ignore warptwin::Node;
+%ignore warptwin::getFrameRelativeDCM;
+%ignore warptwin::FrameRotate;
+%ignore warptwin::FramePositionTransform;
+%ignore warptwin::FrameVelocityTransform;
+%ignore warptwin::getCompositeRotation;
+%ignore warptwin::getCompositeRotationQuat;
 %ignore clockwerk::DataIO;
 %ignore clockwerk::connectSignals;
 %ignore clockwerk::disconnect;
-%ignore modelspace::SpiceManager;
-%ignore modelspace::loadKernel;
-%ignore modelspace::Dispersion;
-%ignore modelspace::UniformDispersion;
-%ignore modelspace::NormalDispersion;
-%ignore modelspace::DispersionEngine;
-%ignore modelspace::SimTimeManager;
-%ignore modelspace::SimulationExecutive;
-%ignore modelspace::ArgParser;
-%ignore modelspace::frameRelativeInit;
-%ignore modelspace::orbitInit;
-%ignore modelspace::CsvLogger;
-%ignore modelspace::Hdf5Logger;
-%ignore modelspace::LogManager;
+%ignore warptwin::SpiceManager;
+%ignore warptwin::loadKernel;
+%ignore warptwin::Dispersion;
+%ignore warptwin::UniformDispersion;
+%ignore warptwin::NormalDispersion;
+%ignore warptwin::DispersionEngine;
+%ignore warptwin::SimTimeManager;
+%ignore warptwin::SimulationExecutive;
+%ignore warptwin::ArgParser;
+%ignore warptwin::frameRelativeInit;
+%ignore warptwin::orbitInit;
+%ignore warptwin::CsvLogger;
+%ignore warptwin::Hdf5Logger;
+%ignore warptwin::LogManager;
 %ignore std::array;
 %ignore std::vector;
 
 // Include other pre-defined modules
 %include <std_string.i>
-%include "<<ClockwerkSwigPath>>/ModelSpacePy.i"
+%include "<<ClockwerkSwigPath>>/WarpTwinPy.i"
 %{
 %}
 %include "core/mathmacros.h"

@@ -5,13 +5,13 @@
 #include "models/SlopeIntercept.h"
 
 using namespace clockwerk;
-using namespace cfspp;
-using namespace modelspace;
+using namespace warpos;
+using namespace warptwin;
 
 /****************************************************
 * @brief Example test showing how to use unit tests for new models
 ****************************************************/
-TEST(modelspace_custom, SlopeInterceptExample) {
+TEST(warptwin_custom, SlopeInterceptExample) {
     // Build our gravity model
     SimulationExecutive exc;
     SlopeIntercept slope_intercept(exc);

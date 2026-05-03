@@ -1,5 +1,5 @@
 /******************************************************************************
-* Copyright (c) ATTX INC 2025. All Rights Reserved.
+* Copyright (c) ATTX Inc 2026. All Rights Reserved.
 *
 * This software and associated documentation (the "Software") are the 
 * proprietary and confidential information of ATTX, INC. The Software is 
@@ -13,8 +13,8 @@
 * transmitted in any form or by any means, for any purpose, without the express 
 * written permission of ATTX, INC.
 ******************************************************************************/
-/* File : ModelSpacePy.i */
-%module(directors="1") ModelSpacePy
+/* File : WarpTwinPy.i */
+%module(directors="1") WarpTwinPy
 %include <stl.i>
 %include <cstring.i>
 %include <std_string.i>
@@ -98,7 +98,7 @@
 #include "simulation/SimTimeManager.h"
 #include "simulation/stateinit.h"
 
-using namespace modelspace;
+using namespace warptwin;
 
 %}
 // Macros
@@ -106,12 +106,12 @@ using namespace modelspace;
 
 // CONFIGURE IGNORE VARIABLES
 %ignore clockwerk::GraphTreeObject::children;
-%ignore cfspp::FlightExecutive::getRegistry;
-%ignore cfspp::GpioConfig_t;
-%ignore cfspp::SpiConfig_t;
-%ignore cfspp::UartConfig_t;
-%ignore cfspp::I2cConfig_t;
-%ignore cfspp::PwmConfig_t;
+%ignore warpos::FlightExecutive::getRegistry;
+%ignore warpos::GpioConfig_t;
+%ignore warpos::SpiConfig_t;
+%ignore warpos::UartConfig_t;
+%ignore warpos::I2cConfig_t;
+%ignore warpos::PwmConfig_t;
 
 %include "types.h"
 %include "configuration.h"
@@ -243,10 +243,10 @@ using namespace modelspace;
 %template(DataIOMRP) clockwerk::DataIO<clockwerk::MRP>;
 %template(DataIOQuaternion) clockwerk::DataIO<clockwerk::Quaternion>;
 
-%template(DataIOJointPtr) clockwerk::DataIO<modelspace::Joint*>;
-%template(DataIOFrameDPtr) clockwerk::DataIO<modelspace::Frame*>;
-%template(DataIOBodyPtr) clockwerk::DataIO<modelspace::Body*>;
-%template(DataIONodePtr) clockwerk::DataIO<modelspace::Node*>;
+%template(DataIOJointPtr) clockwerk::DataIO<warptwin::Joint*>;
+%template(DataIOFrameDPtr) clockwerk::DataIO<warptwin::Frame*>;
+%template(DataIOBodyPtr) clockwerk::DataIO<warptwin::Body*>;
+%template(DataIONodePtr) clockwerk::DataIO<warptwin::Node*>;
 %template(DataIOGTPtr) clockwerk::DataIO<clockwerk::GraphTreeObject*>;
 
-%template(VecFramePtr) std::vector<modelspace::Frame*>;
+%template(VecFramePtr) std::vector<warptwin::Frame*>;

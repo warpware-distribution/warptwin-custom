@@ -5,7 +5,7 @@
             "includePath": [
                 "${workspaceFolder}/**",
                 "${workspaceFolder}/src",
-                "/usr/include/modelspace"
+                "/usr/include/warptwin"
             ]
         }
     ],

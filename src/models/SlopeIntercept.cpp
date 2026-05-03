@@ -2,9 +2,9 @@
 #include "simulation/SimulationExecutive.h"
 
 using namespace clockwerk;
-using namespace cfspp;
+using namespace warpos;
 
-namespace modelspace {
+namespace warptwin {
     // These constructor functions can be largely ignored. These are boilerplate defaults
     // that only need to be modified when including a model within a model, or setting
     // variable values on construction. The only item worth noting is the START_STEP

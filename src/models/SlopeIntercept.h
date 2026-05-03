@@ -16,7 +16,7 @@ aliases = {"m" : "Multiplier",
 
 #include "simulation/Model.h" 
 
-namespace modelspace {
+namespace warptwin {
 
     /**
      * @brief   Simple implementation of y = mx + b

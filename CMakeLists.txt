@@ -1,5 +1,5 @@
 ###############################################################################
-# Copyright (c) ATTX INC 2025. All Rights Reserved.
+# Copyright (c) ATTX Inc 2026. All Rights Reserved.
 #
 # This software and associated documentation (the "Software") are the 
 # proprietary and confidential information of ATTX INC. The Software is 
@@ -14,9 +14,9 @@
 # written permission of ATTX INC.
 ###############################################################################
 
-# ATTX ModelSpace version 0.1
+# ATTX WarpTwin version 0.1
 cmake_minimum_required(VERSION 3.8)
-project(modelspace-custom VERSION 0.1)
+project(warptwin-custom VERSION 0.1)
 cmake_policy(SET CMP0078 NEW)
 cmake_policy(SET CMP0086 NEW)
 cmake_policy(SET CMP0072 NEW)
@@ -31,9 +31,9 @@ set(CMAKE_C_FLAGS "-g -Og -Wall -fPIC")
 
 # Export our project dir for access in Python
 execute_process(COMMAND touch ${PROJECT_BINARY_DIR}/__init__.py)
-execute_process(COMMAND mkdir -p ${PROJECT_BINARY_DIR}/modelspace)
+execute_process(COMMAND mkdir -p ${PROJECT_BINARY_DIR}/warptwin)
 execute_process(COMMAND mkdir -p ${PROJECT_BINARY_DIR}/swig_auto)
-execute_process(COMMAND touch ${PROJECT_BINARY_DIR}/modelspace/__init__.py)
+execute_process(COMMAND touch ${PROJECT_BINARY_DIR}/warptwin/__init__.py)
 
 ##############################################################################
 # Set up dependencies
@@ -47,24 +47,24 @@ include_directories(${PYTHON_INCLUDE_DIRS})
 find_package(HDF5 REQUIRED)
 include_directories(libdeps SYSTEM INTERFACE ${HDF5_INCLUDE_DIRS})
 
-add_definitions(-DMODELSPACE_ROOT_DIR="/usr/share/modelspace")
-add_definitions(-DCLOCKWERK_ROOT_DIR="/usr/share/modelspace")
-add_definitions(-DPROJECT_ROOT_DIR="/usr/share/modelspace")
-add_definitions(-DLICENSE_ROOT_DIR="/usr/share/modelspace")
+add_definitions(-DMODELSPACE_ROOT_DIR="/usr/share/warptwin")
+add_definitions(-DCLOCKWERK_ROOT_DIR="/usr/share/warptwin")
+add_definitions(-DPROJECT_ROOT_DIR="/usr/share/warptwin")
+add_definitions(-DLICENSE_ROOT_DIR="/usr/share/warptwin")
 
 ##############################################################################
 # Library Source Code
 ##############################################################################
 set(SRC_DIR ${PROJECT_SOURCE_DIR}/src)
 include_directories(${SRC_DIR})
-include_directories(/usr/include/modelspace)
+include_directories(/usr/include/warptwin)
 
 # Mark the source directory for our models, tasks, monitors, events, systems
 # This block builds a library from our source to be linked into test and 
 # analysis scripts
 file(GLOB_RECURSE CXX_SRC ${SRC_DIR}/*.cpp)
 add_library(${PROJECT_NAME} SHARED ${CXX_SRC})
-target_link_libraries(${PROJECT_NAME} PUBLIC modelspace locations)
+target_link_libraries(${PROJECT_NAME} PUBLIC warptwin locations)
 
 ##############################################################################
 # Testing Code
@@ -91,7 +91,7 @@ enable_testing()
 # Build all of our tests. These lines loop through the test directory and 
 # build all cpp tests
 add_executable(${PROJECT_NAME}_test ${CXX_TEST})
-target_link_libraries(${PROJECT_NAME}_test gtest_main ${PROJECT_NAME} modelspace locations gcov)
+target_link_libraries(${PROJECT_NAME}_test gtest_main ${PROJECT_NAME} warptwin locations gcov)
 
 include(GoogleTest)
 gtest_discover_tests(${PROJECT_NAME}_test)
@@ -104,7 +104,7 @@ gtest_discover_tests(${PROJECT_NAME}_test)
 file(GLOB_RECURSE ITEM_HEADERS ${SRC_DIR}/models/*.h)
 
 # Preprocess and auto-generate our SWIG files as well as our build metadata json for use
-# in the modelspace GUI     
+# in the warptwin GUI     
 execute_process(COMMAND BuildProcessFiles.py
                 "--info-file=${PROJECT_BINARY_DIR}/custom_models.json"
                 "--incl_swig_dir=${PROJECT_SOURCE_DIR}/swig"
@@ -119,7 +119,7 @@ execute_process(COMMAND BuildProcessFiles.py
 
 find_package (SWIG)
 include (UseSWIG)
-set(CMAKE_SWIG_OUTDIR ${PROJECT_BINARY_DIR}/modelspace)
+set(CMAKE_SWIG_OUTDIR ${PROJECT_BINARY_DIR}/warptwin)
 set(MAN_SWIG_DIR ${PROJECT_SOURCE_DIR}/swig)
 file(GLOB_RECURSE MAN_SWIG ${MAN_SWIG_DIR}/*.i)
 
@@ -138,7 +138,7 @@ foreach(tgt ${MAN_SWIG})
         set_target_properties(${SWIG_MODULE_${tgt_name}_REAL_NAME} 
                               PROPERTIES LIBRARY_OUTPUT_DIRECTORY "${CMAKE_SWIG_OUTDIR}"
                               SWIG_COMPILE_OPTIONS "-fvirtual")
-        target_link_libraries(${tgt_name} modelspace ${PROJECT_NAME})
+        target_link_libraries(${tgt_name} warptwin ${PROJECT_NAME})
     else()
         swig_add_library(${tgt_name} 
                          LANGUAGE python
@@ -148,7 +148,7 @@ foreach(tgt ${MAN_SWIG})
         set_target_properties(${SWIG_MODULE_${tgt_name}_REAL_NAME} 
                               PROPERTIES LIBRARY_OUTPUT_DIRECTORY "${CMAKE_SWIG_OUTDIR}"
                               SWIG_COMPILE_OPTIONS "-fvirtual")
-        target_link_libraries(${tgt_name} modelspace ${PROJECT_NAME})
+        target_link_libraries(${tgt_name} warptwin ${PROJECT_NAME})
     endif()
 endforeach()
 
@@ -168,5 +168,5 @@ foreach(tgt ${AUTO_SWIG})
     set_target_properties(${SWIG_MODULE_${tgt_name}_REAL_NAME} 
                           PROPERTIES LIBRARY_OUTPUT_DIRECTORY "${CMAKE_SWIG_OUTDIR}"
                           SWIG_COMPILE_OPTIONS "-fvirtual")
-    target_link_libraries(${tgt_name} modelspace ${PROJECT_NAME})
+    target_link_libraries(${tgt_name} warptwin ${PROJECT_NAME})
 endforeach()
