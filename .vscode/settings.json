@@ -1,10 +1,11 @@
 {
     "terminal.integrated.env.linux": {"PYTHONPATH":"${workspaceFolder}/build:${workspaceFolder}/python:${workspaceFolder}"},
+    "terminal.integrated.env.osx": {"PYTHONPATH":"${workspaceFolder}/build:${workspaceFolder}/python:${workspaceFolder}"},
     "python.analysis.extraPaths": [
         "${workspaceFolder}/build",
         "${workspaceFolder}/python",
         "${workspaceFolder}"
     ],
     "files.autoSave": "onFocusChange",
-    "search.useIgnoreFiles": false
+    "editor.rulers": [ 100 ]
 }

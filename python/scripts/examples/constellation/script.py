@@ -55,7 +55,7 @@ exc.parseArgs(sys.argv)                                                     # Th
 
 # Create instances of the Earth and Sun as SPICE planets
 earth = SpicePlanet(exc, "earth")
-sun = SpicePlanet(exc, "sun")
+# sun = SpicePlanet(exc, "sun")
 
 # Now loop and create our spacecraft constellation
 spacecraft = []
@@ -84,6 +84,8 @@ log.addParameter(eom[0].outputs.range_rate,             "range_rate_mps")
 log.addParameter(eom[0].outputs.visible,                "visible")
 log.addParameter(eom[0].outputs.total_visits,           "visits")
 exc.logManager().addLog(log, 10)
+
+exc.enableVisuals()
 
 exc.startup()
 

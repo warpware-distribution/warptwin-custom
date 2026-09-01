@@ -1,40 +1,59 @@
-#!/bin/bash
-# Update the system package manager
-sudo apt update;
-sudo apt upgrade;
-# Install packages necessary for build
-sudo apt install -y cmake;
-sudo apt install -y gcc g++;
-sudo apt install -y python3 python3-dev python3-tk;
-sudo apt install -y libhdf5-serial-dev;
-sudo apt install -y libgl1-mesa-dev libglu1-mesa-dev freeglut3-dev mesa-common-dev libglfw3-dev;
-sudo apt install -y doxygen;
-sudo apt install -y swig;
-sudo apt install -y lcov;               # For coverage
-sudo apt install -y graphviz clang;     # For docs
-sudo apt install -y asciidoctor;        # For docs
-# Install git-lfs and pull all the git lfs files
-sudo apt install -y git-lfs;
-# Install Python packages
-sudo apt install -y python3-pip;
-sudo apt install -y python3-tk;
-pip3 install --upgrade matplotlib;                  # For liveplot and analysis
-pip3 install --upgrade pandas;                      # For post processing
-pip3 install --upgrade numpy;                       # For analysis
-pip3 install --upgrade h5py;                        # For analysis
-pip3 install --upgrade plotly;                      # For analysis
-pip3 install --upgrade kaleido;                     # For saving plotly images
-pip3 install --upgrade selenium;                    # For cesium visuals
-pip3 install --upgrade requests urllib3 chardet;    # For cesium visuals
-pip3 install --upgrade streamlit;                   # For Dallin tool
-sudo pip3 install --upgrade streamlit;              # For Dallin tool
-# Install google chrome for visuals
-wget https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb;
-sudo dpkg -i google-chrome-stable_current_amd64.deb;
-sudo apt -f -y install;
-rm google-chrome-stable_current_amd64.deb;
-# Update git submodules. If already done this won't do anything.
-git submodule update --remote --recursive --init;
-# Check out files which were not pulled using git lfs before it was installed
-git lfs fetch --all;
-git lfs checkout;
+#!/usr/bin/env bash
+###############################################################################
+# Copyright (c) ATTX Inc 2026. All Rights Reserved.
+#
+# Installs everything needed to BUILD custom models against an installed
+# WarpTwin. The WarpTwin package itself is not installed here -- it ships as a
+# signed release tarball with its own install.sh, and its dependencies
+# (numpy, h5py, matplotlib, pandas, scipy, plotly, tk) come in with it.
+#
+# What this adds is the toolchain: a C++ compiler, cmake, SWIG and the Python
+# and HDF5 development headers the wrappers compile against.
+###############################################################################
+set -Eeuo pipefail
+
+log() { printf '[warptwin-custom] %s\n' "$*"; }
+die() { printf '[warptwin-custom] ERROR: %s\n' "$*" >&2; exit 1; }
+
+[[ "$(uname -s)" == "Linux" ]] || die "this script targets Ubuntu/Debian; on macOS install the toolchain with Homebrew (cmake, hdf5, swig, python3)"
+
+sudo apt-get update -y
+
+# Hard requirements. Without any one of these the build cannot proceed.
+sudo apt-get install -y \
+    build-essential \
+    cmake \
+    git \
+    pkg-config \
+    python3 \
+    python3-dev \
+    python3-tk \
+    swig
+
+# libhdf5-serial-dev is the historical name and a transitional package that
+# newer Ubuntu releases have dropped in favour of libhdf5-dev. Both provide the
+# same headers, so take whichever this release has.
+if ! sudo apt-get install -y libhdf5-dev; then
+    sudo apt-get install -y libhdf5-serial-dev
+fi
+
+# Documentation and coverage tooling. Useful, but not worth failing over.
+for pkg in doxygen graphviz asciidoctor lcov; do
+    sudo apt-get install -y "${pkg}" || log "optional package '${pkg}' unavailable; skipping"
+done
+
+# WarpTwin itself has to be installed for anything here to compile or run. It is
+# not on apt -- it comes from the signed release tarball -- so this only reports.
+if ! dpkg -s warptwin >/dev/null 2>&1; then
+    log ""
+    log "WarpTwin is not installed. Custom models compile against its headers and"
+    log "link against its libraries, so install the release package first:"
+    log ""
+    log "    tar xzf warptwin-<version>-*.tar.gz"
+    log "    cd warptwin-<version>-*/ && ./install.sh"
+    log ""
+    exit 1
+fi
+
+log "WarpTwin $(dpkg-query -W -f='${Version}' warptwin) detected; build dependencies installed"
+log "Next: mkdir build && cd build && cmake .. && make -j\$(nproc) && make test"

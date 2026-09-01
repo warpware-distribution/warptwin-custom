@@ -26,7 +26,6 @@ from warptwin.WarpTwinPy import (SimulationExecutive, CsvLogger, DEGREES_TO_RADI
                                      Frame, NOT_SCHEDULED)
 from warptwin.CustomPlanet import CustomPlanet
 from warptwin.Spacecraft import Spacecraft
-from warptwinutils.vizkit.VizKitPlanetRelative import VizKitPlanetRelative
 from warptwin.OrbitalElementsSensorModel import OrbitalElementsSensorModel
 from warptwin.OrbitalElementsStateInit import OrbitalElementsStateInit
 from warptwinutils.lambert import lambert
@@ -74,12 +73,6 @@ sc.params.mass(500) # kg
 sc_oe = OrbitalElementsSensorModel(exc, "sc_oe")
 connectSignals(sc.outputs.pos_sc_pci, sc_oe.inputs.pos__inertial)
 connectSignals(sc.outputs.vel_sc_pci, sc_oe.inputs.vel__inertial)
-
-# Create an instance of vizkit to see our spacecraft propagation
-vk = VizKitPlanetRelative(exc)
-vk.target(sc.outputs.body())
-vk.planet(earth.outputs.inertial_frame())
-exc.logManager().addLog(vk, Time(20))
 
 # Set up logging
 states = CsvLogger(exc, "states.csv")
@@ -169,10 +162,11 @@ else:
     print("Unable to identify a functional burn. Exiting")
     exit(1)
 
-# And schedule our burns
+# And schedule our burns. programManeuver takes a velocity change (m/s) --
+# the spacecraft scales it by its own mass internally.
 period = 2*math.pi*STARTING_ORBIT[0]/np.linalg.norm(v_start)
-sc.programManeuver(CartesianVector3([val*sc.params.mass() for val in dv1]), period, earth.outputs.inertial_frame())
-sc.programManeuver(CartesianVector3([val*sc.params.mass() for val in dv2]), period + best_tof, earth.outputs.inertial_frame())
+sc.programManeuver(CartesianVector3([float(v) for v in dv1]), period, earth.outputs.inertial_frame())
+sc.programManeuver(CartesianVector3([float(v) for v in dv2]), period + best_tof, earth.outputs.inertial_frame())
 
 # Allow startup to initialize frames
 exc.startup()

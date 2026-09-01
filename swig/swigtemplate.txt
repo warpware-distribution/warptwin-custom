@@ -107,6 +107,18 @@
 %rename (<<ItemName>>_Inputs) <<NamespaceName>><<ItemName>>::Inputs;
 %rename (<<ItemName>>_Outputs) <<NamespaceName>><<ItemName>>::Outputs;
 
+// Signals are read-only from Python. SWIG emits a setter for every public member, and for a
+// DataIO member that setter assigns one signal object over another -- replacing a fixed position
+// on the graph tree instead of setting the value it holds. Values are set through the call
+// operator (model.params.mass(12.5)), which is unaffected by this.
+%immutable;
+
+// Signals are read-only from Python. SWIG emits a setter for every public member, and for a
+// DataIO member that setter assigns one signal object over another -- replacing a fixed position
+// on the graph tree instead of setting the value it holds. Values are set through the call
+// operator (model.params.mass(12.5)), which is unaffected by this.
+%immutable;
+
 //         Signal name          Type                Default
 START_PARAMS <<ItemParamsContent>>};
 
@@ -118,6 +130,55 @@ START_OUTPUTS <<ItemOutputsContent>>};
 #include "<<IncludeDir>>"
 %}
 %include "<<IncludeDir>>"
+%mutable;
+
+// Graph tree accessors.
+//
+// A model is a GraphTreeObject -- Model derives from warpos::App, which derives from
+// clockwerk::GraphTreeObject -- but that base is %ignore'd above, because WarpTwinPy already
+// wraps it and wrapping it again in all ninety of these modules would duplicate the type. The
+// side effect is that the generated proxy has no base class at all, so a model arrives in Python
+// with none of the tree accessors on it: no name, no address, no parent. Its signals have them,
+// because a signal is a WarpTwinPy type; the model itself does not.
+//
+// These put the read side back. The bodies are ordinary C++ compiled into the wrapper, so they
+// reach the inherited methods regardless of what SWIG was told to ignore, and the pointers they
+// return resolve through the shared type table to WarpTwinPy's own GraphTreeObject proxy.
+//
+// Read-only on purpose. name(const char*) and parent(GraphTreeObject*) are deliberately not
+// here: a model's position and name on the tree are fixed at construction, and everything that
+// addresses it -- the logger, telemetry, the command router -- resolves by that name.
+%extend <<NamespaceName>><<ItemName>> {
+    /// @brief The name this model was constructed under
+    const char* name() const {return $self->name();}
+
+    /// @brief The model's full address on the simulation tree, as the logger resolves it
+    std::string address() {return $self->address();}
+
+    /// @brief The object this model hangs from, or None if it is not on a tree
+    clockwerk::GraphTreeObject* parent() {return $self->parent();}
+
+    /// @brief Depth of this model below the root
+    unsigned char rank() {return $self->rank();}
+
+    /// @brief Number of children, and the total below this model
+    unsigned int nChildren() const {return $self->nChildren();}
+    unsigned int nDescendants() const {return $self->nDescendants();}
+
+    /// @brief Whether this model is picked up by a logging sweep
+    bool loggable() {return $self->loggable();}
+
+    // getByAddress is deliberately not exposed here. It only resolves from the root of a tree:
+    // the search requires the first element of the address to name the node it starts from,
+    // while the match test compares against the absolute address, so called on anything below
+    // the root the two can never agree and it returns nothing for every input. The executive's
+    // own getByAddress is the one to use.
+
+    /// @brief Child at an index, or None when the index is past the end
+    clockwerk::GraphTreeObject* childAtIndex(unsigned int i) const {
+        return $self->childAtIndex(i);
+    }
+}
 %{
 typedef <<NamespaceName>><<ItemName>>::Params Params;
 typedef <<NamespaceName>><<ItemName>>::Inputs Inputs;

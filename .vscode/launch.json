@@ -1,6 +1,14 @@
 {
-    "version": "1.0.0",
+    "version": "0.2.0",
     "configurations": [
+        {
+            "name": "Unit Test Debug",
+            "type": "cppdbg",
+            "request": "launch",
+            "cwd": "${workspaceFolder}",
+            "program": "${workspaceFolder}/build/warptwin-custom_test",
+            "args": []
+        },
         {
             "name": "Python: Current File",
             "type": "debugpy",

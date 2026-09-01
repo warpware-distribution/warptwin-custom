@@ -32,16 +32,17 @@ from warptwin.PlanetRelativeStatesModel import PlanetRelativeStatesModel
 from warptwin.AsphericalGravityModel import AsphericalGravityModel
 from warptwin.MSISAtmosphereModel import MSISAtmosphereModel
 from warptwin.FlatPlateDragModel import FlatPlateDragModel
+from warptwin.VisualsModel import VisualsModel
 
 exc = SimulationExecutive()     # Create our executive -- by convention named exc
 exc.parseArgs(sys.argv)         # this interperets command-line inputs
 exc.setRateHz(1)                #  We can setRateHz or setRateSec -- default is 1 second
-exc.enableVisuals()
+# exc.logLevel(LOG_DEBUG)
 
-earth = SpicePlanet(exc, "earth")
+moon = SpicePlanet(exc, "moon")
 
 sc = Spacecraft(exc, "sc")
-sc.params.planet_ptr(earth)
+sc.params.planet_ptr(moon)
 
 states = Hdf5Logger(exc, "sc_states.h5")
 states.addParameter('.exc.schedule.time.base_time', "sim_time")     # Example adding time by string
@@ -51,8 +52,11 @@ states.addParameter(sc.planetRelativeModel().outputs.longitude, "longitude")
 states.addParameter(sc.planetRelativeModel().outputs.altitude_detic, "altitude_m")
 exc.logManager().addLog(states, 1)
 
+if exc.visualsEnabled():
+    exc.visualsModel().params.planet_ptr(moon)
+
 exc.startup()
 
-sc.initializeFromOrbitalElements(7278137.0, 0.1, DEGREES_TO_RADIANS*40.0, DEGREES_TO_RADIANS*10.0, DEGREES_TO_RADIANS*10.0, DEGREES_TO_RADIANS*30.0)
+sc.initializeFromOrbitalElements(3278137.0, 0.1, DEGREES_TO_RADIANS*40.0, DEGREES_TO_RADIANS*10.0, DEGREES_TO_RADIANS*10.0, DEGREES_TO_RADIANS*30.0)
 
 exc.run()

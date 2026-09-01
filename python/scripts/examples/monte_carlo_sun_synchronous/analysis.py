@@ -51,6 +51,8 @@ pp.zlabel('Z (m)')
 pp()
 fig = pp.figure()
 fig.add_trace(go.Scatter3d(x=x_sph.flatten(), y=y_sph.flatten(), z=z_sph.flatten(), marker_color='blue'))
+import plotly.io as pio
+pio.renderers.default = "browser"
 fig.show()
 
 # Add plot to document twice -- once with extension and once without

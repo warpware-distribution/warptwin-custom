@@ -60,11 +60,11 @@ if __name__ == '__main__':
     # which the sim uses for run 0, which is undispersed. All other runs, which may be
     # set using the --run=<number> command line argument, will use dispersed values drawn from
     # the dispersion.
-    #                                                       NAME,     DEFAULT,     MIN,          MAX
-    alt_km = exc.dispersions().createUniformInputDispersion("alt_km", 500.0,       480.0,        520.0)
+    #                                                       NAME,     DEFAULT,  MIN,    MAX     DESC
+    alt_km = exc.dispersions().createUniformInputDispersion("alt_km", 500.0,    480.0,  520.0,  "Disperse altitude in LEO ranges")
 
-    #                                                    NAME,     DEFAULT,        MEAN,         STDEV
-    LTAN = exc.dispersions().createNormalInputDispersion("LTAN",   6.0,            6.0,          1.0)
+    #                                                    NAME,     DEFAULT,     MEAN,   STDEV   DESC
+    LTAN = exc.dispersions().createNormalInputDispersion("LTAN",   6.0,         6.0,    1.0,    "Disperse LTAN around 6:00")
 
     # Call startup on our executive. This will initialize our exec and,
     # recursively, all of our models.
@@ -84,4 +84,5 @@ if __name__ == '__main__':
 
     # Now run our simulation by calling our sim.run. This will automatically
     # terminate when our sim reaches its end time
+    exc.writeDispersionFile("./results/dispersions.adoc")
     exc.run()

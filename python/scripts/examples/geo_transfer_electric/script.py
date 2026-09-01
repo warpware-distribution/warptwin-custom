@@ -24,7 +24,6 @@ from warptwin.WarpTwinPy import (SimulationExecutive, CsvLogger, DEGREES_TO_RADI
                                      Frame)
 from warptwin.SpicePlanet import SpicePlanet
 from warptwin.Spacecraft import Spacecraft
-from warptwinutils.vizkit.VizKitPlanetRelative import VizKitPlanetRelative
 from warptwin.OrbitalElementsSensorModel import OrbitalElementsSensorModel
 
 # GN&C-specific stuff
@@ -71,19 +70,13 @@ connectSignals(sc.outputs.vel_sc_pci, dg.inputs.vel_pci)
 # Generate a node, which applies our electric thrust force on the vehicle.
 # Alternatively, we could use the thruster model, but for this simple example
 # using a node directly is sufficient
-dg_node = Node("dg_node", sc.outputs.body())
+dg_node = Node("dg_node", sc.body())
 dg_node.force_frame(earth.outputs.inertial_frame())
 
 # Generate a model to output our spacecraft orbital elements for control and plotting
 sc_oe = OrbitalElementsSensorModel(exc, "sc_oe")
 connectSignals(sc.outputs.pos_sc_pci, sc_oe.inputs.pos__inertial)
 connectSignals(sc.outputs.vel_sc_pci, sc_oe.inputs.vel__inertial)
-
-# Create an instance of vizkit to see our spacecraft propagation
-vk = VizKitPlanetRelative(exc)
-vk.target(sc.outputs.body())
-vk.planet(earth.outputs.inertial_frame())
-exc.logManager().addLog(vk, Time(500))
 
 # Set up logging
 states = CsvLogger(exc, "states.csv")

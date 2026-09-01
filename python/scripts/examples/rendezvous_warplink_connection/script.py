@@ -41,7 +41,6 @@ from warptwin.PointMassGravityModel import PointMassGravityModel
 from warptwin.LvlhFrameManagerModel import LvlhFrameManagerModel
 from warptwin.PdAttitudeControl import PdAttitudeControl
 from warptwin.PidTranslationalControl import PidTranslationalControl
-from warptwinutils.vizkit.VizKitSpacecraftRelative import VizKitSpacecraftRelative
 from warptwin.VisualsModel import VisualsModel
 from warptwin.TelemetryManager import TelemetryManager
 from warptwin.CommandManager import CommandManager
@@ -53,9 +52,10 @@ if __name__ == '__main__':
     exc = SimulationExecutive()
 
     # Now parse our command line
-    exc.args().addDefaultArgument("end",     20000)
+    exc.args().addDefaultArgument("end",     2000)
     exc.parseArgs(sys.argv)
     exc.setRateHz(10)
+    exc.enableVisuals()
 
     # Create our Earth planet 
     earth = CustomPlanet(exc, "earth")
@@ -64,9 +64,14 @@ if __name__ == '__main__':
     # chaser spacecraft, where our chaser is maneuvering about our target
     target = Spacecraft(exc, "target")
     target.params.planet_ptr(earth)
+    target.params.visuals_model("CubeSat-3U.glb")
+
+    # Add a frame to the visuals for our target's LVLH frame
+    exc.visualsModel().addFrame(target.lvlh(), "target_lvlh")  
 
     chaser = Spacecraft(exc, "chaser")
     chaser.params.planet_ptr(earth)
+    chaser.params.visuals_model("CubeSat-3U.glb")
 
     # Build a frame state sensor model for our LVLH relative state
     fs_lvlh = FrameStateSensorModel(exc, END_STEP, "fs_lvlh")
@@ -126,7 +131,7 @@ if __name__ == '__main__':
     # Finally, configure the IP address and ports for our connection with WarpLink. See
     # the WarpLink README for instructions on how to configure from the WarpLink side.
     # You can easily get your IP address over wifi by running "ip route" in the linux terminal
-    exc.setWarpLinkInterface("192.168.112.1", 5005, 5006)   # 5005 is standard tlm, 5006 is standard cmd
+    exc.setFswWarpLinkInterface("192.168.112.1", 5005, 5006)   # 5005 is standard tlm, 5006 is standard cmd
 
     # Set up our logging. Here we'll create a simple CSV logger to record our
     # time and spacecraft state in the root frame
