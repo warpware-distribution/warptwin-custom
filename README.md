@@ -11,8 +11,10 @@ against a WarpTwin that is already installed on the machine, and produces a
 
 ## Prerequisites
 
-WarpTwin itself must be installed first. It ships as a signed release tarball,
-not through apt:
+Ubuntu and macOS are both supported.
+
+WarpTwin itself must be installed first. It ships as a signed release, not
+through apt or Homebrew:
 
 ```
 tar xzf warptwin-<version>-*.tar.gz
@@ -20,9 +22,16 @@ cd warptwin-<version>-*/
 ./install.sh
 ```
 
-That gives you the headers under `/usr/include/warptwin`, the libraries beside
-them, the `warptwin` Python package, and `wt-gui`. Confirm it with
-`warptwin-doctor`.
+That gives you the headers, the libraries beside them, the `warptwin` Python
+package, and `wt-gui`. Confirm it with `warptwin-doctor`. The two platforms use
+different prefixes, which is worth knowing when you go looking for anything:
+
+| | Ubuntu | macOS |
+| --- | --- | --- |
+| Headers | `/usr/include/warptwin` | `/usr/local/warptwin/include/warptwin` |
+| Libraries | `/usr/lib/<triplet>/warptwin` | `/usr/local/warptwin/lib` |
+| Data | `/usr/share/warptwin` | `/usr/local/warptwin/share/warptwin` |
+| Python package | on the default `sys.path` | `/usr/local/warptwin/python`, added by a `.pth` file |
 
 Then install the toolchain this repository needs to compile against it -- a C++
 compiler, cmake, SWIG, and the Python and HDF5 development headers:
@@ -30,6 +39,10 @@ compiler, cmake, SWIG, and the Python and HDF5 development headers:
 ```
 ./install.sh
 ```
+
+On Ubuntu that is apt; on macOS it is Homebrew, and it expects the Xcode Command
+Line Tools (`xcode-select --install`) and `brew` to already be present, since
+neither can be installed unattended.
 
 ## Building
 
@@ -50,17 +63,29 @@ Run cmake. It has to be re-run whenever:
 cmake ..
 ```
 
-If WarpTwin is installed somewhere other than `/usr` or `/usr/local/warptwin`,
-point cmake at the prefix:
+cmake finds the installed WarpTwin itself, searching `/usr` and
+`/usr/local/warptwin` among others, and prints what it found. If yours is
+somewhere else, point cmake at the prefix:
 
 ```
 cmake .. -DWARPTWIN_ROOT=/opt/warptwin
 ```
 
+If the machine has several Python installations -- common on macOS, where a
+Homebrew upgrade can move `python3` to a new minor version while the installed
+WarpTwin stays on the old one -- pick the interpreter WarpTwin was installed
+for. cmake warns at configure time when the one it picked cannot import the
+installed `warptwin` package:
+
+```
+cmake .. -DPython3_EXECUTABLE=$(which python3.14)
+```
+
 Compile. `-j<n>` sets the number of cores to build with.
 
 ```
-make -j$(nproc)
+make -j$(nproc)                  # Ubuntu
+make -j$(sysctl -n hw.ncpu)      # macOS
 ```
 
 Run the unit tests. 100% of tests should always pass.
@@ -73,7 +98,7 @@ make test
 
 | Path | Contents |
 | --- | --- |
-| `build/libwarptwin-custom.so` | Your models, compiled and linked against WarpTwin |
+| `build/libwarptwin-custom.so` (`.dylib` on macOS) | Your models, compiled and linked against WarpTwin |
 | `build/custom/` | The `custom` Python package -- one module per model |
 | `build/custom_models.json` | Model metadata for the GUI |
 | `build/warptwin-custom_test` | The gtest binary `make test` runs |
@@ -98,6 +123,10 @@ slope.params.b(3.0)
 ```
 export PYTHONPATH=$PWD/build:$PYTHONPATH
 ```
+
+Only the `custom` package needs this. The installed `warptwin` package is
+already importable on both platforms -- on macOS through a `.pth` file that puts
+`/usr/local/warptwin/python` on `sys.path`.
 
 ## Using your models from the GUI
 
@@ -137,9 +166,15 @@ cd python/scripts/examples
 ./run_all_examples.sh
 ```
 
+On macOS, the three examples that import `warptwinutils`
+(`earth_observation`, `geo_transfer_impulsive`, `monte_carlo_sun_synchronous`)
+fail with `ModuleNotFoundError`. That package is part of the WarpTwin release on
+Ubuntu but is not currently staged into the macOS one, so it is missing from the
+install rather than from here; the other thirteen examples run.
+
 ## Files vendored from the WarpTwin release
 
-Three things the build needs are not currently part of the installed package, so
+Some of what the build needs is not currently part of the installed package, so
 copies matching the release live here and must be kept in step with the WarpTwin
 version you are building against:
 
@@ -148,7 +183,13 @@ version you are building against:
 | `swig/WarpTwinPy.i`, `swig/*.swg`, `swig/swigtemplate.txt` | The shared SWIG interface and the model interface template |
 | `python/buildutils/` | `BuildProcessFiles.py`, which generates a SWIG interface per model header |
 | `includes/warptwin_sim/` | warpOS package headers (`types.h`, `configuration.h`, `SimLinux.h`, `SimPlatform.h`, `SimSetup.h`) included by bare name from the installed headers |
+| `includes/thirdparty/` | `nlohmann/json.hpp` and `highfive/`, which the installed headers include by name. The Ubuntu package copies these trees in alongside its own headers; the macOS package does not |
 
-The build prefers the installed copies of the warpOS package headers when the
-install provides them, and falls back to these otherwise; cmake says which it
-used.
+The build prefers the installed copies of all of these when the install provides
+them, and falls back to the vendored ones otherwise; cmake says which it used
+for each.
+
+The versions here have to be the ones WarpTwin itself was built against. Both
+are header-only and their types cross into the compiled `libwarptwin`, so a
+Homebrew `nlohmann-json` or `highfive` of a different version is not an
+equivalent substitute even where it compiles.

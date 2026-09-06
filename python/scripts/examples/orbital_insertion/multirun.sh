@@ -76,6 +76,20 @@ progress_file="$(mktemp)"
 lock_file="$(mktemp)"
 failed_file="$(mktemp)"   # newline-separated list of failed run indices
 
+# ── Progress-counter lock ─────────────────────────────────────────────────────
+# `flock` comes from util-linux and is not present on macOS, so guard the shared
+# counter with an atomic `mkdir` when it is missing: mkdir either creates the
+# directory or fails, on every POSIX filesystem, which is all the mutual
+# exclusion a counter increment needs.
+lock_dir="${lock_file}.d"
+if command -v flock >/dev/null 2>&1; then
+    lock_acquire() { exec 200>"$lock_file"; flock -x 200; }
+    lock_release() { exec 200>&-; }
+else
+    lock_acquire() { until mkdir "$lock_dir" 2>/dev/null; do sleep 0.05; done; }
+    lock_release() { rmdir "$lock_dir" 2>/dev/null || true; }
+fi
+
 echo 0 > "$progress_file"
 
 cleanup() {
@@ -129,31 +143,31 @@ run_single() {
     local exit_code=$?
     set -e
 
-    (
-        flock -x 200
+    lock_acquire
 
-        # Record failure
-        if [ "$exit_code" -ne 0 ]; then
-            echo "$i" >> "$failed_file"
-        fi
+    # Record failure
+    if [ "$exit_code" -ne 0 ]; then
+        echo "$i" >> "$failed_file"
+    fi
 
-        local completed
-        completed=$(< "$progress_file")
-        completed=$(( completed + 1 ))
-        echo "$completed" > "$progress_file"
+    local completed
+    completed=$(< "$progress_file")
+    completed=$(( completed + 1 ))
+    echo "$completed" > "$progress_file"
 
-        local failed_count
-        failed_count=$(wc -l < "$failed_file")
+    local failed_count
+    failed_count=$(wc -l < "$failed_file")
 
-        draw_progress_bar "$completed" "$number_of_runs" "$failed_count"
-    ) 200>"$lock_file"
+    draw_progress_bar "$completed" "$number_of_runs" "$failed_count"
+
+    lock_release
 
     return $exit_code
 }
 
-export -f run_single draw_progress_bar
+export -f run_single draw_progress_bar lock_acquire lock_release
 export script_file additional_arguments output_dir number_of_runs
-export progress_file lock_file failed_file
+export progress_file lock_file lock_dir failed_file
 
 # ── Parallel execution ────────────────────────────────────────────────────────
 # Use GNU parallel if available (better job control); fall back to xargs.

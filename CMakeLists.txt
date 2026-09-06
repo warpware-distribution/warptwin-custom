@@ -37,6 +37,11 @@ set(CMAKE_CXX_FLAGS "-g -Og -Wall -fPIC")
 set(CMAKE_C_FLAGS "-g -Og -Wall -fPIC")
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
+# .vscode/c_cpp_properties.json points IntelliSense at this, so the editor sees
+# the same include paths and defines the compiler does on whichever platform the
+# build was configured for, rather than a hand-maintained guess at them.
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+
 ##############################################################################
 # Locate the installed WarpTwin
 ##############################################################################
@@ -78,7 +83,7 @@ if(CMAKE_LIBRARY_ARCHITECTURE)
     list(INSERT WT_LIB_SUFFIXES 0 lib/${CMAKE_LIBRARY_ARCHITECTURE}/warptwin)
 endif()
 
-foreach(_wt_lib warptwin locations warpos_flight_lib)
+foreach(_wt_lib warptwin locations)
     string(TOUPPER ${_wt_lib} _wt_lib_var)
     find_library(WARPTWIN_${_wt_lib_var}_LIBRARY
                  NAMES ${_wt_lib}
@@ -92,6 +97,34 @@ foreach(_wt_lib warptwin locations warpos_flight_lib)
                 "incomplete -- reinstall the WarpTwin package.")
     endif()
 endforeach()
+
+# warpos is a separate shared library on Linux and is folded into libwarptwin on
+# macOS, where the package ships no libwarpos_flight_lib at all -- its symbols
+# are already in libwarptwin.dylib. So look for it, and only add it to the link
+# line when the install actually has one. Requiring it unconditionally is what
+# made this project fail to configure on a perfectly good macOS install.
+find_library(WARPTWIN_WARPOS_FLIGHT_LIB_LIBRARY
+             NAMES warpos_flight_lib
+             HINTS ${WT_SEARCH_PREFIXES}
+             PATH_SUFFIXES ${WT_LIB_SUFFIXES}
+             NO_DEFAULT_PATH)
+if(WARPTWIN_WARPOS_FLIGHT_LIB_LIBRARY)
+    set(WARPTWIN_LIBRARIES ${WARPTWIN_WARPTWIN_LIBRARY}
+                           ${WARPTWIN_WARPOS_FLIGHT_LIB_LIBRARY}
+                           ${WARPTWIN_LOCATIONS_LIBRARY})
+else()
+    set(WARPTWIN_LIBRARIES ${WARPTWIN_WARPTWIN_LIBRARY}
+                           ${WARPTWIN_LOCATIONS_LIBRARY})
+endif()
+
+# The package's libraries are linked by absolute path but record themselves as
+# @rpath/lib*.dylib, and libwarptwin pulls in liblocations and libhdf5 the same
+# way. Nothing built here resolves those at runtime unless the directory holding
+# them is on the binary's run path, so put it there explicitly -- the same
+# /usr/local/warptwin/lib entry the installed warptwin extension modules carry.
+get_filename_component(WARPTWIN_LIBRARY_DIR "${WARPTWIN_WARPTWIN_LIBRARY}" DIRECTORY)
+list(APPEND CMAKE_BUILD_RPATH "${WARPTWIN_LIBRARY_DIR}")
+list(APPEND CMAKE_INSTALL_RPATH "${WARPTWIN_LIBRARY_DIR}")
 
 # The data directory the compiled-in paths in locations.h have to resolve to.
 # Everything the simulation reads at runtime -- spice kernels, planet data,
@@ -119,8 +152,9 @@ else()
 endif()
 
 message(STATUS "WarpTwin headers:   ${WARPTWIN_INCLUDE_DIR}")
-message(STATUS "WarpTwin library:   ${WARPTWIN_WARPTWIN_LIBRARY}")
+message(STATUS "WarpTwin libraries: ${WARPTWIN_LIBRARIES}")
 message(STATUS "WarpTwin data:      ${WARPTWIN_SHARE_DIR}")
+message(STATUS "WarpTwin license:   ${WARPTWIN_LICENSE_DIR}")
 
 # locations.h reads these four out of the compiler command line. They are not
 # defaulted in the header, so anything that includes it -- which is every model,
@@ -145,6 +179,34 @@ else()
     include_directories(SYSTEM ${PROJECT_SOURCE_DIR}/includes/warptwin_sim)
 endif()
 
+# The two header-only third-party libraries the installed headers include by
+# their own names: nlohmann/json.hpp from Model.h and highfive/highfive.hpp from
+# Hdf5Logger.h, which SimulationExecutive.h includes. Every model pulls in both.
+#
+# The Ubuntu package copies these trees into include/warptwin alongside its own
+# headers; the macOS package does not, so on macOS a model cannot compile
+# against the install as shipped. Copies matching the release live in
+# includes/thirdparty/ and are used only when the install lacks them.
+#
+# The versions have to be the ones WarpTwin itself was built against -- both are
+# header-only and their types cross the boundary into the compiled libwarptwin,
+# so a Homebrew nlohmann-json or highfive of a different version is not an
+# equivalent substitute even when it compiles.
+set(WT_USE_VENDORED_THIRDPARTY FALSE)
+foreach(_wt_vendored nlohmann/json.hpp highfive/highfive.hpp)
+    get_filename_component(_wt_vendored_lib ${_wt_vendored} DIRECTORY)
+    if(EXISTS "${WARPTWIN_INCLUDE_DIR}/${_wt_vendored}")
+        message(STATUS "${_wt_vendored_lib} headers: ${WARPTWIN_INCLUDE_DIR} (from the install)")
+    else()
+        message(STATUS "${_wt_vendored_lib} headers: ${PROJECT_SOURCE_DIR}/includes/thirdparty "
+                       "(vendored -- the installed header tree does not carry them)")
+        set(WT_USE_VENDORED_THIRDPARTY TRUE)
+    endif()
+endforeach()
+if(WT_USE_VENDORED_THIRDPARTY)
+    include_directories(SYSTEM ${PROJECT_SOURCE_DIR}/includes/thirdparty)
+endif()
+
 ##############################################################################
 # Set up remaining dependencies
 ##############################################################################
@@ -154,6 +216,30 @@ endif()
 # which fails at link time.
 find_package(Python3 REQUIRED COMPONENTS Interpreter Development)
 include_directories(${Python3_INCLUDE_DIRS})
+
+# The wrappers built here are only useful next to the installed warptwin ones,
+# and the installed ones are compiled for one specific CPython -- their file
+# names carry no ABI tag, so a mismatched interpreter cannot fall back to
+# anything, it just fails to import. That is easy to end up in on macOS, where a
+# Homebrew upgrade moves python3 to a new minor version while the installed
+# WarpTwin stays put. Check it here, where the message can name the interpreter,
+# rather than leaving it to surface as an import error in a user's script.
+execute_process(COMMAND ${Python3_EXECUTABLE} -c "import warptwin"
+                RESULT_VARIABLE WARPTWIN_PY_IMPORT_RESULT
+                OUTPUT_QUIET
+                ERROR_VARIABLE WARPTWIN_PY_IMPORT_ERROR)
+if(NOT WARPTWIN_PY_IMPORT_RESULT EQUAL 0)
+    string(STRIP "${WARPTWIN_PY_IMPORT_ERROR}" WARPTWIN_PY_IMPORT_ERROR)
+    message(WARNING
+            "${Python3_EXECUTABLE} (${Python3_VERSION}) cannot import the installed warptwin "
+            "package, so the modules built here will not be usable beside it either. The C++ "
+            "library and tests will still build.\n"
+            "Point the build at the interpreter WarpTwin was installed for with "
+            "-DPython3_EXECUTABLE=<path>.\n"
+            "The import reported:\n${WARPTWIN_PY_IMPORT_ERROR}")
+else()
+    message(STATUS "Python interpreter:  ${Python3_EXECUTABLE} (${Python3_VERSION}, imports warptwin)")
+endif()
 
 # What the SWIG extension modules link against for CPython. An extension module
 # resolves CPython symbols from the interpreter that imports it, never from a
@@ -223,10 +309,7 @@ include_directories(${SRC_DIR})
 # analysis scripts
 file(GLOB_RECURSE CXX_SRC ${SRC_DIR}/*.cpp)
 add_library(${PROJECT_NAME} SHARED ${CXX_SRC})
-target_link_libraries(${PROJECT_NAME} PUBLIC
-                      ${WARPTWIN_WARPTWIN_LIBRARY}
-                      ${WARPTWIN_WARPOS_FLIGHT_LIB_LIBRARY}
-                      ${WARPTWIN_LOCATIONS_LIBRARY})
+target_link_libraries(${PROJECT_NAME} PUBLIC ${WARPTWIN_LIBRARIES})
 
 ##############################################################################
 # Testing Code

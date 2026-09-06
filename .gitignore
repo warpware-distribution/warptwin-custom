@@ -20,3 +20,4 @@ figures/
 *.deb
 *.adoc
 *.local.md
+!WarpTwin_Users_Manual.pdf

@@ -54,6 +54,23 @@ mkdir -p "$output_dir"
 progress_file=$(mktemp)
 lock_file=$(mktemp)
 
+# ── Progress-counter lock ─────────────────────────────────────────────────────
+# `flock` comes from util-linux and is not present on macOS, so guard the shared
+# counter with an atomic `mkdir` when it is missing: mkdir either creates the
+# directory or fails, on every POSIX filesystem, which is all the mutual
+# exclusion a counter increment needs.
+lock_dir="${lock_file}.d"
+if command -v flock >/dev/null 2>&1; then
+    lock_acquire() { exec 200>"$lock_file"; flock -x 200; }
+    lock_release() { exec 200>&-; }
+else
+    lock_acquire() { until mkdir "$lock_dir" 2>/dev/null; do sleep 0.05; done; }
+    lock_release() { rmdir "$lock_dir" 2>/dev/null || true; }
+fi
+
+# GNU coreutils' `nproc` is not on macOS; sysctl reports the same number there.
+max_jobs="$(nproc 2>/dev/null || sysctl -n hw.ncpu 2>/dev/null || echo 4)"
+
 echo 0 > "$progress_file"
 
 # Draw the progress bar
@@ -94,22 +111,27 @@ run_single() {
     mkdir -p "$run_dir"
     python3 "$script_file" ${additional_arguments} --run="$i" --out-dir="$run_dir" > "$run_dir/output.txt" 2>&1
 
-    (
-        flock -x 200
-        local completed
-        completed=$(< "$progress_file")
-        completed=$((completed + 1))
-        echo "$completed" > "$progress_file"
-        draw_progress_bar "$completed" "$number_of_runs"
-    ) 200>"$lock_file"
+    lock_acquire
+    local completed
+    completed=$(< "$progress_file")
+    completed=$((completed + 1))
+    echo "$completed" > "$progress_file"
+    draw_progress_bar "$completed" "$number_of_runs"
+    lock_release
 }
 
-export -f run_single draw_progress_bar
-export script_file additional_arguments output_dir number_of_runs progress_file lock_file
+export -f run_single draw_progress_bar lock_acquire lock_release
+export script_file additional_arguments output_dir number_of_runs progress_file lock_file lock_dir
 
-# Run in parallel (preferring GNU parallel, falling back to xargs)
-seq 0 $((number_of_runs - 1)) | parallel -j 0 run_single 2>/dev/null || \
-seq 0 $((number_of_runs - 1)) | xargs -P "$(nproc)" -I{} bash -c 'run_single "$@"' _ {}
+# Run in parallel (preferring GNU parallel, falling back to xargs). Test for
+# parallel rather than running it and falling through on failure: with the old
+# `|| xargs` form, a genuine mid-run failure under parallel re-ran the whole
+# sweep through xargs.
+if command -v parallel >/dev/null 2>&1; then
+    seq 0 $((number_of_runs - 1)) | parallel -j 0 run_single
+else
+    seq 0 $((number_of_runs - 1)) | xargs -P "$max_jobs" -I{} bash -c 'run_single "$@"' _ {}
+fi
 
 # Final 100% and newline
 draw_progress_bar "$number_of_runs" "$number_of_runs"

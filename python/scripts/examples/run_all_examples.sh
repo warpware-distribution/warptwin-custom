@@ -20,6 +20,41 @@ export PYTHONUNBUFFERED=1
 
 TIMEOUT_SECS=120
 
+# GNU coreutils' `timeout` is not part of a stock macOS; Homebrew's coreutils
+# installs it as `gtimeout`. Pick whichever exists and fall back to a plain
+# background-process watchdog so a machine with neither still runs the suite
+# rather than reporting every example as a failure.
+if command -v timeout >/dev/null 2>&1; then
+    run_with_timeout() { timeout --kill-after=5s "${1}s" "${@:2}"; }
+elif command -v gtimeout >/dev/null 2>&1; then
+    run_with_timeout() { gtimeout --kill-after=5s "${1}s" "${@:2}"; }
+else
+    # Exit codes match `timeout`'s: 124 when the deadline is hit, 137 when the
+    # process had to be killed, so the reporting below needs no special case.
+    run_with_timeout() {
+        local secs="$1"; shift
+        "$@" &
+        local pid=$!
+        local waited=0
+        while kill -0 "$pid" 2>/dev/null; do
+            if [ "$waited" -ge "$secs" ]; then
+                kill -TERM "$pid" 2>/dev/null
+                sleep 5
+                if kill -0 "$pid" 2>/dev/null; then
+                    kill -KILL "$pid" 2>/dev/null
+                    wait "$pid" 2>/dev/null
+                    return 137
+                fi
+                wait "$pid" 2>/dev/null
+                return 124
+            fi
+            sleep 1
+            waited=$((waited + 1))
+        done
+        wait "$pid"
+    }
+fi
+
 for dir in */; do
     dir="${dir%/}"
     cd "$BASE_DIR/$dir" || continue
@@ -34,7 +69,7 @@ for dir in */; do
     printf "[%2d] %-60s " "$TOTAL" "$dir/script.py"
 
     LOG=$(mktemp)
-    if timeout --kill-after=5s "${TIMEOUT_SECS}s" \
+    if run_with_timeout "$TIMEOUT_SECS" \
            python3 script.py --end=10 >"$LOG" 2>&1; then
         echo -e "${GREEN}[PASS]${NC}"
         PASSED=$((PASSED + 1))
